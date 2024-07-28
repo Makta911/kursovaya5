@@ -20,7 +20,7 @@ class PostgresDBManager(DBManager):
     def get_companies_and_vacancies_count(self) -> list[tuple[str, int]]:
         sql = """
             SELECT e.name, COUNT(*) as vacancies_count
-            FROM emploters as e
+            FROM employers as e
             LEFT JOIN vacancies as v ON e.id = v.employer_id
             GROUP BY e.name
         """
@@ -35,12 +35,15 @@ class PostgresDBManager(DBManager):
         Получает список всех вакансий с указанием названия компании,
         названия вакансии, зарплаты и ссылки на вакансию
         """
-        self.cursor.execute("""
-            SELECT c.company_name, v.vacancy_name, v.salary_min, v.salary_max, v.vacancy_url
-            FROM companies c
-            JOIN vacancies v USING(company_id);
-        """)
-        return self.cursor.fetchall()
+        sql = """
+            SELECT v.name,v.salary_from, v.salary_to, v.url
+            FROM vacancies v
+        """
+        self.connect()
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql)
+            return cursor.fetchall()
 
     def get_avg_salary(self) -> float:
         sql = """
@@ -58,20 +61,28 @@ class PostgresDBManager(DBManager):
         """
         Получает список всех вакансий, у которых зарплата выше средней по всем вакансиям
         """
-        self.cursor.execute("""
+        sql = """
                SELECT * FROM vacancies
-               WHERE (salary_min + salary_max) > 
-               (SELECT AVG(salary_min + salary_max) FROM vacancies);
-           """)
-        return self.cursor.fetchall()
+               WHERE (salary_to + salary_from) > 
+               (SELECT AVG(salary_to + salary_from) FROM vacancies);
+           """
+        self.connect()
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql)
+            return cursor.fetchall()
 
     def get_vacancies_with_keyword(self, keyword):
         """
         Получает список всех вакансий,
         в названии которых содержатся переданные в метод слова
         """
-        self.cursor.execute("""
+        sql = """
                SELECT * FROM vacancies 
-               WHERE vacancy_name ILIKE '%%' || %s || '%%';
-           """, (keyword,))  # '%%' означает любую последовательность символов перед и после ключевого слова (%s)
-        return self.cursor.fetchall()
+               WHERE name LIKE '%%' || %s || '%%';
+           """, (keyword,)  # '%%' означает любую последовательность символов перед и после ключевого слова (%s)
+        self.connect()
+
+        with self.connection.cursor() as cursor:
+            cursor.execute(sql)
+            return cursor.fetchall()

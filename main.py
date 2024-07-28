@@ -2,17 +2,12 @@ from kurs5.api_clients import HeadHunterAPIClient
 from kurs5.config import settings
 from kurs5.db.loader import load_employers, load_vacancies
 from kurs5.db.migrations import create_database, apply_migrations
+from kurs5.user_interaction import run_interation
 from prettytable import PrettyTable
-
+from kurs5.db.managers.pg_db_manager import PostgresDBManager
+from kurs5.db.managers import pg_db_manager
 def main():
-
-    print("""Введите ваш запрос:
-              1 - Список всех компаний и количество вакансий у каждой компании
-              2 - Cписок всех вакансий с указанием названия компании, названия вакансии, зарплаты и ссылки на вакансию          
-              3 - Средняя зарплата по вакансиям
-              4 - Список всех вакансий, у которых зарплата выше средней по всем вакансиям
-              5 - Список всех вакансий, в названии которых содержатся ключевые слова""")
-
+    run_interation()
 
 
 if __name__ == '__main__':
